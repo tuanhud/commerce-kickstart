@@ -1,0 +1,38 @@
+From a55b1c6e5e604285102c0582974e895b564fca3c Mon Sep 17 00:00:00 2001
+From: Chris Caldwell <chrisolof@gmail.com>
+Date: Tue, 5 Nov 2013 12:37:00 -0700
+Subject: [PATCH] Issue #1789366 by louis_sabet: Fixed average rating widget
+ display.
+
+---
+ includes/fivestar.field.inc |   11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/includes/fivestar.field.inc b/includes/fivestar.field.inc
+index 53cda56..6314741 100644
+--- a/includes/fivestar.field.inc
++++ b/includes/fivestar.field.inc
+@@ -675,10 +675,19 @@ function fivestar_field_prepare_view($entity_type, $entities, $field, $instances
+   foreach ($entities as $id => $entity) {
+     // Populating the $items[$id] array even for items with no value forces
+     // the render system to output a widget.
+-    if ($instances[$id]['widget']['type'] == 'exposed') {
++    if ($instances[$id]['widget']['type'] == 'exposed' || $instances[$id]['widget']['type'] == 'stars') {
+       // If the widget type is exposed then we want to look up the voting api values.
+       $tag = $field['settings']['axis'];
+       $votes = fivestar_get_votes($entity_type, $id, $tag);
++      // If fivestar_get_votes() gives us back nothing, use what's stored in the
++      // field
++      if (empty($votes['average'])) {
++        if (!empty($items[$id][0]['rating'])) {
++          $votes['count']['value'] = 1;
++          $votes['user']['value'] = $items[$id][0]['rating'];
++          $votes['average']['value'] = $items[$id][0]['rating'];
++        }
++      }
+       $values['user'] = isset($votes['user']['value']) ? $votes['user']['value'] : 0;
+       $values['average'] = isset($votes['average']['value']) ? $votes['average']['value'] : 0;
+       $values['count'] = isset($votes['count']['value']) ? $votes['count']['value'] : 0;
+-- 
+1.7.10.4
+
